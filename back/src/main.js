@@ -20,8 +20,10 @@ app.use((req, res, next) => {
 // === Import des routes ===
 const authRouter = require('./router/authRouter');
 const adminRouter = require('./router/adminRouter');
+const userRouter = require('./router/userRouter'); 
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/user', userRouter);
 
 // === Route de test ===
 app.get('/', (req, res) => {
@@ -35,6 +37,11 @@ app.get('/', (req, res) => {
         'POST /api/auth/login': 'Connexion',
         'GET /api/auth/users': 'Liste des utilisateurs',
         'GET /api/auth/profile': 'Profil utilisateur'
+      },
+      user: { 
+        'GET /api/user/profile': 'Récupérer son profil (JWT requis)',
+        'PUT /api/user/profile': 'Modifier son profil (JWT requis)',
+        'DELETE /api/user/account': 'Supprimer son compte (JWT requis)'
       },
       admin: {
         'GET /api/admin/users': 'Liste tous les users (Admin)',
