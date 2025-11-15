@@ -1,15 +1,34 @@
+
 const AuthRepository = require('../repository/authRepository'); // Ajustez le chemin selon votre structure
-const bcrypt = require('bcryptjs');
+
+// service/userService.js
+const userRepository = require('../repository/userRepository');
 
 class UserService {
   
   // Récupérer le profil de l'utilisateur connecté
+
+const User = require('../model');
+
+const bcrypt = require('bcryptjs');
+
+class UserService {
+  
+
+  // Récupérer le profil de l'utilisateur connecté
+
+
   async getProfile(req, res) {
     try {
       console.log('👤 Récupération du profil pour:', req.user.email);
       
+
       const user = await AuthRepository.findById(req.user._id);
-      
+
+      const user = await userRepository.findById(req.user._id);
+
+      const user = await User.findById(req.user._id).select('-password');
+
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -42,7 +61,15 @@ class UserService {
     }
   }
 
+
   // Mettre à jour le profil de l'utilisateur connecté
+
+  // Mettre à jour le profil de l'utilisateur connecté
+
+  
+    // Mettre à jour le profil de l'utilisateur connecté
+   
+
   async updateProfile(req, res) {
     try {
       const userId = req.user._id;
@@ -50,9 +77,17 @@ class UserService {
 
       console.log('✏️ Mise à jour du profil pour:', req.user.email);
 
+
       // Récupérer l'utilisateur avec le mot de passe via findByEmail
       // (AuthRepository.findById exclut le password, on utilise findByEmail à la place)
       const user = await AuthRepository.findByEmail(req.user.email);
+
+      // Récupérer l'utilisateur avec le mot de passe pour vérification
+      const user = await userRepository.findById(userId, true);
+
+      // Récupérer l'utilisateur avec le mot de passe 
+      const user = await User.findById(userId);
+
 
       if (!user) {
         return res.status(404).json({
@@ -64,15 +99,17 @@ class UserService {
       // Créer un objet avec les données à mettre à jour
       const updateData = {};
 
+
       if (firstName !== undefined) updateData.firstName = firstName.trim();
       if (lastName !== undefined) updateData.lastName = lastName.trim();
       if (address !== undefined) updateData.address = address.trim();
       if (city !== undefined) updateData.city = city.trim();
       if (state !== undefined) updateData.state = state.trim();
 
-      // Gestion du changement de mot de passe
+
       if (newPassword) {
         // Vérifier que le mot de passe actuel est fourni
+
         if (!currentPassword) {
           return res.status(400).json({
             success: false,
@@ -89,13 +126,14 @@ class UserService {
           });
         }
 
-        // Valider la longueur du nouveau mot de passe
+
         if (newPassword.length < 6) {
           return res.status(400).json({
             success: false,
             message: 'Le nouveau mot de passe doit contenir au moins 6 caractères'
           });
         }
+
 
         // Hasher le nouveau mot de passe manuellement
         const salt = await bcrypt.genSalt(10);
@@ -112,6 +150,32 @@ class UserService {
           message: 'Erreur lors de la mise à jour'
         });
       }
+
+        // Mettre à jour le mot de passe via le repository
+        await userRepository.updatePassword(userId, newPassword);
+        console.log('🔐 Mot de passe mis à jour');
+      }
+
+      // Mettre à jour les autres données du profil
+      const updatedUser = await userRepository.updateById(userId, updateData);
+
+        // Hasher le nouveau mot de passe
+       user.password = newPassword;
+       await user.save();
+        console.log('🔐 Mot de passe mis à jour');
+      }
+
+     
+      // Effectuer la mise à jour
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        updateData,
+        { 
+          new: true, 
+          runValidators: true 
+        }
+      ).select('-password');
+
 
       console.log('✅ Profil mis à jour avec succès');
 
@@ -133,7 +197,7 @@ class UserService {
     } catch (error) {
       console.error('❌ Erreur updateProfile:', error);
       
-      // Gestion des erreurs de validation Mongoose
+
       if (error.name === 'ValidationError') {
         const messages = Object.values(error.errors).map(err => err.message);
         return res.status(400).json({
@@ -146,6 +210,68 @@ class UserService {
       return res.status(500).json({
         success: false,
         message: 'Erreur lors de la mise à jour du profil'
+      });
+    }
+  }
+
+
+ // Supprimer le compte de l'utilisateur connecté
+   
+  async deleteAccount(req, res) {
+    try {
+      const userId = req.user._id;
+      const { password } = req.body;
+
+      console.log('🗑️ Demande de suppression de compte pour:', req.user.email);
+
+      // Vérifier que le mot de passe est fourni
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Le mot de passe est requis pour supprimer le compte'
+        });
+      }
+
+      // Récupérer l'utilisateur avec le mot de passe
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'Utilisateur non trouvé'
+        });
+      }
+
+      // Vérifier le mot de passe
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Mot de passe incorrect'
+        });
+      }
+
+      // Empêcher les admins de supprimer leur compte via cette route
+      if (user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Les administrateurs ne peuvent pas supprimer leur compte via cette route'
+        });
+      }
+
+      // Supprimer le compte
+      await User.findByIdAndDelete(userId);
+
+      console.log('✅ Compte supprimé avec succès:', user.email);
+      return res.json({
+        success: true,
+        message: 'Votre compte a été supprimé avec succès'
+      });
+    } catch (error) {
+      console.error('❌ Erreur deleteAccount:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la suppression du compte'
       });
     }
   }
