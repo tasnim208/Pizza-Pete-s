@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
+<></>
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
