@@ -1,29 +1,34 @@
-<<<<<<< HEAD
+
+const AuthRepository = require('../repository/authRepository'); // Ajustez le chemin selon votre structure
+
 // service/userService.js
 const userRepository = require('../repository/userRepository');
 
 class UserService {
   
   // Récupérer le profil de l'utilisateur connecté
-=======
+
 const User = require('../model');
+
 const bcrypt = require('bcryptjs');
 
 class UserService {
   
-   //Récupérer le profil de l'utilisateur connecté
-   
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
+  // Récupérer le profil de l'utilisateur connecté
+
+
   async getProfile(req, res) {
     try {
       console.log('👤 Récupération du profil pour:', req.user.email);
       
-<<<<<<< HEAD
+
+      const user = await AuthRepository.findById(req.user._id);
+
       const user = await userRepository.findById(req.user._id);
-=======
+
       const user = await User.findById(req.user._id).select('-password');
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
-      
+
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -56,13 +61,15 @@ class UserService {
     }
   }
 
-<<<<<<< HEAD
+
   // Mettre à jour le profil de l'utilisateur connecté
-=======
+
+  // Mettre à jour le profil de l'utilisateur connecté
+
   
     // Mettre à jour le profil de l'utilisateur connecté
    
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
   async updateProfile(req, res) {
     try {
       const userId = req.user._id;
@@ -70,13 +77,17 @@ class UserService {
 
       console.log('✏️ Mise à jour du profil pour:', req.user.email);
 
-<<<<<<< HEAD
+
+      // Récupérer l'utilisateur avec le mot de passe via findByEmail
+      // (AuthRepository.findById exclut le password, on utilise findByEmail à la place)
+      const user = await AuthRepository.findByEmail(req.user.email);
+
       // Récupérer l'utilisateur avec le mot de passe pour vérification
       const user = await userRepository.findById(userId, true);
-=======
+
       // Récupérer l'utilisateur avec le mot de passe 
       const user = await User.findById(userId);
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
 
       if (!user) {
         return res.status(404).json({
@@ -88,23 +99,17 @@ class UserService {
       // Créer un objet avec les données à mettre à jour
       const updateData = {};
 
-<<<<<<< HEAD
-=======
-    
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
       if (firstName !== undefined) updateData.firstName = firstName.trim();
       if (lastName !== undefined) updateData.lastName = lastName.trim();
       if (address !== undefined) updateData.address = address.trim();
       if (city !== undefined) updateData.city = city.trim();
       if (state !== undefined) updateData.state = state.trim();
 
-<<<<<<< HEAD
-      // Gestion du changement de mot de passe
-      if (newPassword) {
-=======
+
       if (newPassword) {
         // Vérifier que le mot de passe actuel est fourni
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
         if (!currentPassword) {
           return res.status(400).json({
             success: false,
@@ -121,10 +126,7 @@ class UserService {
           });
         }
 
-<<<<<<< HEAD
-=======
-        
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
         if (newPassword.length < 6) {
           return res.status(400).json({
             success: false,
@@ -132,7 +134,23 @@ class UserService {
           });
         }
 
-<<<<<<< HEAD
+
+        // Hasher le nouveau mot de passe manuellement
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(newPassword, salt);
+        console.log('🔐 Changement de mot de passe demandé');
+      }
+
+      // Effectuer la mise à jour via le repository
+      const updatedUser = await AuthRepository.update(userId, updateData);
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'Erreur lors de la mise à jour'
+        });
+      }
+
         // Mettre à jour le mot de passe via le repository
         await userRepository.updatePassword(userId, newPassword);
         console.log('🔐 Mot de passe mis à jour');
@@ -140,7 +158,7 @@ class UserService {
 
       // Mettre à jour les autres données du profil
       const updatedUser = await userRepository.updateById(userId, updateData);
-=======
+
         // Hasher le nouveau mot de passe
        user.password = newPassword;
        await user.save();
@@ -157,9 +175,10 @@ class UserService {
           runValidators: true 
         }
       ).select('-password');
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
 
       console.log('✅ Profil mis à jour avec succès');
+
       return res.json({
         success: true,
         message: 'Profil mis à jour avec succès',
@@ -178,10 +197,7 @@ class UserService {
     } catch (error) {
       console.error('❌ Erreur updateProfile:', error);
       
-<<<<<<< HEAD
-=======
-      // Gestion des erreurs de validation Mongoose
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
       if (error.name === 'ValidationError') {
         const messages = Object.values(error.errors).map(err => err.message);
         return res.status(400).json({
@@ -198,9 +214,7 @@ class UserService {
     }
   }
 
-<<<<<<< HEAD
-  
-=======
+
  // Supprimer le compte de l'utilisateur connecté
    
   async deleteAccount(req, res) {
@@ -261,7 +275,7 @@ class UserService {
       });
     }
   }
->>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
+
 }
 
 module.exports = new UserService();
