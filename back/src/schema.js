@@ -195,7 +195,20 @@ const updateProfileSchema = Joi.object({
   'object.min': 'Aucune donnée à mettre à jour'
 }); // Au moins un champ doit être fourni
 
+<<<<<<< HEAD
 // Le schéma deleteAccountSchema a été supprimé
+=======
+// Schéma pour la suppression de compte
+const deleteAccountSchema = Joi.object({
+  password: Joi.string()
+    .required()
+    .messages({
+      'string.empty': 'Le mot de passe est requis',
+      'any.required': 'Le mot de passe est requis'
+    })
+});
+
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
 
 // Middleware de validation
 const validateRequest = (schema) => {
@@ -204,6 +217,10 @@ const validateRequest = (schema) => {
     if (error) {
       const errorMessages = error.details.map(detail => detail.message);
       
+<<<<<<< HEAD
+=======
+     
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
       if (errorMessages.length === 1 && errorMessages[0] === 'Aucune donnée à mettre à jour') {
         return res.status(400).json({ 
           success: false, 
@@ -227,5 +244,9 @@ module.exports = {
   adminRegisterSchema, 
   loginSchema, 
   updateProfileSchema,
+<<<<<<< HEAD
+=======
+  deleteAccountSchema,
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
   validateRequest 
 };

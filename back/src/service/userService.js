@@ -1,14 +1,28 @@
+<<<<<<< HEAD
 // service/userService.js
 const userRepository = require('../repository/userRepository');
 
 class UserService {
   
   // Récupérer le profil de l'utilisateur connecté
+=======
+const User = require('../model');
+const bcrypt = require('bcryptjs');
+
+class UserService {
+  
+   //Récupérer le profil de l'utilisateur connecté
+   
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
   async getProfile(req, res) {
     try {
       console.log('👤 Récupération du profil pour:', req.user.email);
       
+<<<<<<< HEAD
       const user = await userRepository.findById(req.user._id);
+=======
+      const user = await User.findById(req.user._id).select('-password');
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
       
       if (!user) {
         return res.status(404).json({
@@ -42,7 +56,13 @@ class UserService {
     }
   }
 
+<<<<<<< HEAD
   // Mettre à jour le profil de l'utilisateur connecté
+=======
+  
+    // Mettre à jour le profil de l'utilisateur connecté
+   
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
   async updateProfile(req, res) {
     try {
       const userId = req.user._id;
@@ -50,8 +70,13 @@ class UserService {
 
       console.log('✏️ Mise à jour du profil pour:', req.user.email);
 
+<<<<<<< HEAD
       // Récupérer l'utilisateur avec le mot de passe pour vérification
       const user = await userRepository.findById(userId, true);
+=======
+      // Récupérer l'utilisateur avec le mot de passe 
+      const user = await User.findById(userId);
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
 
       if (!user) {
         return res.status(404).json({
@@ -63,14 +88,23 @@ class UserService {
       // Créer un objet avec les données à mettre à jour
       const updateData = {};
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
       if (firstName !== undefined) updateData.firstName = firstName.trim();
       if (lastName !== undefined) updateData.lastName = lastName.trim();
       if (address !== undefined) updateData.address = address.trim();
       if (city !== undefined) updateData.city = city.trim();
       if (state !== undefined) updateData.state = state.trim();
 
+<<<<<<< HEAD
       // Gestion du changement de mot de passe
       if (newPassword) {
+=======
+      if (newPassword) {
+        // Vérifier que le mot de passe actuel est fourni
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
         if (!currentPassword) {
           return res.status(400).json({
             success: false,
@@ -87,6 +121,10 @@ class UserService {
           });
         }
 
+<<<<<<< HEAD
+=======
+        
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
         if (newPassword.length < 6) {
           return res.status(400).json({
             success: false,
@@ -94,6 +132,7 @@ class UserService {
           });
         }
 
+<<<<<<< HEAD
         // Mettre à jour le mot de passe via le repository
         await userRepository.updatePassword(userId, newPassword);
         console.log('🔐 Mot de passe mis à jour');
@@ -101,6 +140,24 @@ class UserService {
 
       // Mettre à jour les autres données du profil
       const updatedUser = await userRepository.updateById(userId, updateData);
+=======
+        // Hasher le nouveau mot de passe
+       user.password = newPassword;
+       await user.save();
+        console.log('🔐 Mot de passe mis à jour');
+      }
+
+     
+      // Effectuer la mise à jour
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        updateData,
+        { 
+          new: true, 
+          runValidators: true 
+        }
+      ).select('-password');
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
 
       console.log('✅ Profil mis à jour avec succès');
       return res.json({
@@ -121,6 +178,10 @@ class UserService {
     } catch (error) {
       console.error('❌ Erreur updateProfile:', error);
       
+<<<<<<< HEAD
+=======
+      // Gestion des erreurs de validation Mongoose
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
       if (error.name === 'ValidationError') {
         const messages = Object.values(error.errors).map(err => err.message);
         return res.status(400).json({
@@ -137,7 +198,70 @@ class UserService {
     }
   }
 
+<<<<<<< HEAD
   
+=======
+ // Supprimer le compte de l'utilisateur connecté
+   
+  async deleteAccount(req, res) {
+    try {
+      const userId = req.user._id;
+      const { password } = req.body;
+
+      console.log('🗑️ Demande de suppression de compte pour:', req.user.email);
+
+      // Vérifier que le mot de passe est fourni
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Le mot de passe est requis pour supprimer le compte'
+        });
+      }
+
+      // Récupérer l'utilisateur avec le mot de passe
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'Utilisateur non trouvé'
+        });
+      }
+
+      // Vérifier le mot de passe
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Mot de passe incorrect'
+        });
+      }
+
+      // Empêcher les admins de supprimer leur compte via cette route
+      if (user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Les administrateurs ne peuvent pas supprimer leur compte via cette route'
+        });
+      }
+
+      // Supprimer le compte
+      await User.findByIdAndDelete(userId);
+
+      console.log('✅ Compte supprimé avec succès:', user.email);
+      return res.json({
+        success: true,
+        message: 'Votre compte a été supprimé avec succès'
+      });
+    } catch (error) {
+      console.error('❌ Erreur deleteAccount:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la suppression du compte'
+      });
+    }
+  }
+>>>>>>> f8e15f2c1447716d86d48cbe3798a3128373f085
 }
 
 module.exports = new UserService();
